@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CGPA Calculator • Marksheet Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(145deg, #eef2f7 0%, #f8fafd 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    .calculator-container {
+      max-width: 1300px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 2.5rem;
+      padding: 2rem 2.2rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .input-panel {
+      flex: 1.2;
+      min-width: 400px;
+      background: #ffffff;
+      border-radius: 2rem;
+      padding: 2rem 2rem 1.8rem;
+      box-shadow: 0 10px 25px -8px rgba(0, 20, 40, 0.15);
+      border: 1px solid #ffffff50;
+    }
+
+    .input-panel h2 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #0b2b4b;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 0.2rem;
+    }
+
+    .input-panel h2 i {
+      background: #1e4c7c;
+      color: white;
+      padding: 10px;
+      border-radius: 16px;
+      font-size: 1.4rem;
+      box-shadow: 0 8px 12px -6px #1e4c7c80;
+    }
+
+    .subhead {
+      color: #5b6f87;
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+      font-weight: 500;
+      border-left: 4px solid #2b7a8a;
+      padding-left: 12px;
+    }
+
+    .student-details {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      color: #284b6b;
+    }
+
+    .input-group input {
+      padding: 14px 18px;
+      border-radius: 18px;
+      border: 1.5px solid #dae2ec;
+      background: #fbfdff;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      outline: none;
+      color: #0f2e44;
+    }
+
+    .input-group input:focus {
+      border-color: #2b7a8a;
+      box-shadow: 0 0 0 4px #2b7a8a20;
+      background: white;
+    }
+
+    .subject-section {
+      margin-top: 0.5rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .subject-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 1rem;
+    }
+
+    .subject-header h3 {
+      font-weight: 700;
+      color: #123a5e;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .subject-header h3 i {
+      color: #2b7a8a;
+      font-size: 1.2rem;
+    }
+
+    .subject-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      background: #f9fcff;
+      padding: 10px 12px;
+      border-radius: 20px;
+      border: 1px solid #e5edf5;
+      flex-wrap: wrap;
+    }
+
+    .subject-row .subj-name {
+      flex: 1.4;
+      min-width: 120px;
+    }
+
+    .subject-row .subj-max {
+      width: 90px;
+    }
+
+    .subject-row .subj-marks {
+      width: 90px;
+    }
+
+    .subject-row input {
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: 1.5px solid #d0ddee;
+      background: white;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: 0.15s;
+    }
+
+    .subject-row input:focus {
+      border-color: #2b7a8a;
+      box-shadow: 0 0 0 3px #2b7a8a20;
+    }
+
+    .subject-row .input-label-sm {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #5a748d;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 2px;
+      display: block;
+    }
+
+    .remove-btn {
+      background: #f1f6fc;
+      border: none;
+      color: #b22234;
+      font-size: 1.1rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid #cfdfef;
+      flex-shrink: 0;
+    }
+
+    .remove-btn:hover {
+      background: #ffe8e8;
+      color: #c00;
+      border-color: #f5b5b5;
+    }
+
+    .add-btn {
+      background: #eaf2fa;
+      border: 1.5px dashed #9bb7d4;
+      color: #1e4c7c;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 12px 18px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 5px;
+    }
+
+    .add-btn:hover {
+      background: #d9e8f7;
+      border-color: #527fa0;
+      color: #0d2e4b;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 1.8rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 14px 24px;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-primary {
+      background: #123a5e;
+      color: white;
+      box-shadow: 0 10px 18px -8px #123a5e;
+    }
+
+    .btn-primary:hover {
+      background: #0c2b48;
+      transform: translateY(-2px);
+      box-shadow: 0 18px 25px -12px #123a5e;
+    }
+
+    .btn-outline {
+      background: white;
+      color: #123a5e;
+      border: 1.5px solid #cbdae9;
+    }
+
+    .btn-outline:hover {
+      background: #f0f6ff;
+      border-color: #2b7a8a;
+    }
+
+    .btn-export {
+      background: #2b7a8a;
+      color: white;
+      box-shadow: 0 10px 18px -8px #2b7a8a;
+    }
+
+    .btn-export:hover {
+      background: #1e5e6b;
+      transform: translateY(-2px);
+    }
+
+    /* right – marksheet panel */
+    .marksheet-panel {
+      flex: 1;
+      min-width: 420px;
+      background: #ffffff;
+      border-radius: 2rem;
+      padding: 1.8rem 2rem 2rem;
+      box-shadow: 0 20px 35px -12px rgba(0, 20, 40, 0.2);
+      border: 1px solid #ffffffb0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .marksheet-card {
+      background: #ffffff;
+      border-radius: 1.5rem;
+      padding: 1.6rem 1.6rem 1.8rem;
+      box-shadow: 0 8px 18px -6px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e9f0f8;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .marksheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #d9e7f2;
+      padding-bottom: 12px;
+      margin-bottom: 18px;
+    }
+
+    .marksheet-header h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #123a5e;
+      letter-spacing: -0.01em;
+    }
+
+    .marksheet-header i {
+      color: #2b7a8a;
+      font-size: 1.7rem;
+    }
+
+    .student-info {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+      background: #f7fbfe;
+      padding: 14px 18px;
+      border-radius: 20px;
+      font-size: 0.95rem;
+    }
+
+    .student-info span {
+      font-weight: 600;
+      color: #0d2d4a;
+    }
+
+    .student-info .label {
+      font-weight: 500;
+      color: #5a748d;
+      margin-right: 6px;
+    }
+
+    .table-responsive {
+      width: 100%;
+      margin: 0.5rem 0 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      border-radius: 12px;
+      overflow: hidden;
+      table-layout: fixed;
+    }
+
+    th {
+      background: #1d4669;
+      color: white;
+      font-weight: 600;
+      padding: 11px 6px;
+      text-align: left;
+      font-size: 0.72rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 6px;
+      border-bottom: 1px solid #deecf5;
+      background: white;
+      font-weight: 500;
+      color: #173e5c;
+      font-size: 0.8rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Column widths to ensure everything fits */
+    th:nth-child(1), td:nth-child(1) { width: 6%; text-align: center; }
+    th:nth-child(2), td:nth-child(2) { width: 30%; }
+    th:nth-child(3), td:nth-child(3) { width: 16%; text-align: center; }
+    th:nth-child(4), td:nth-child(4) { width: 16%; text-align: center; }
+    th:nth-child(5), td:nth-child(5) { width: 18%; text-align: center; }
+    th:nth-child(6), td:nth-child(6) { width: 14%; text-align: center; }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .pass-badge {
+      background: #e2f3e4;
+      color: #1d6b2e;
+      font-weight: 700;
+      font-size: 0.72rem;
+      padding: 4px 8px;
+      border-radius: 30px;
+      display: inline-block;
+      letter-spacing: 0.02em;
+    }
+
+    .fail-badge {
+      background: #fbe6e6;
+      color: #b22234;
+      font-weight: 700;
+      font-size: 0.72rem;
+      padding: 4px 8px;
+      border-radius: 30px;
+      display: inline-block;
+      letter-spacing: 0.02em;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ecf3f9;
+      border-radius: 20px;
+      padding: 1rem 1.4rem;
+      margin-top: 0.8rem;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+    }
+
+    .cgpa-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cgpa-box .label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      color: #59738b;
+    }
+
+    .cgpa-box .value {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #123a5e;
+      line-height: 1.2;
+    }
+
+    .overall-status {
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 10px 22px;
+      border-radius: 40px;
+      background: white;
+      box-shadow: 0 6px 14px -6px #b0c9dd;
+    }
+
+    .status-pass {
+      color: #1d6b2e;
+      background: #e2f3e4;
+    }
+
+    .status-fail {
+      color: #b22234;
+      background: #fbe6e6;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: #809ab3;
+      font-weight: 500;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .empty-message i {
+      font-size: 3.5rem;
+      color: #bdd1e4;
+    }
+
+    .marksheet-footer {
+      margin-top: auto;
+      font-size: 0.7rem;
+      color: #99aec1;
+      text-align: center;
+      padding-top: 1rem;
+      border-top: 1px dashed #cddfee;
+      letter-spacing: 0.02em;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #b6cee2;
+      border-radius: 10px;
+    }
+
+    /* Special export mode: expands everything so nothing is cut off */
+    .export-mode {
+      width: auto !important;
+      min-width: 700px !important;
+      max-width: none !important;
+      overflow: visible !important;
+    }
+    .export-mode .table-responsive {
+      overflow: visible !important;
+    }
+    .export-mode table {
+      table-layout: auto !important;
+      width: 100% !important;
+    }
+    .export-mode th, .export-mode td {
+      white-space: nowrap !important;
+      padding: 12px 10px !important;
+    }
+  </style>
+</head>
+<body>
+<div class="calculator-container">
+  <div class="input-panel">
+    <h2>
+      <i class="fas fa-graduation-cap"></i> CGPA Calculator
+    </h2>
+    <div class="subhead">Enter marks and max marks • Pass if ≥ 35%</div>
+
+    <div class="student-details">
+      <div class="input-group">
+        <label><i class="fas fa-user"></i> Student Name</label>
+        <input type="text" id="studentName" placeholder="e.g. Aditya Sharma">
+      </div>
+      <div class="input-group">
+        <label><i class="fas fa-id-card"></i> Roll Number</label>
+        <input type="text" id="rollNumber" placeholder="e.g. CS2024001">
+      </div>
+    </div>
+
+    <div class="subject-section">
+      <div class="subject-header">
+        <h3><i class="fas fa-book-open"></i> Subjects</h3>
+        <span style="font-size:0.8rem; color:#5b6f87;"><i class="fas fa-info-circle"></i> min 35% to pass</span>
+      </div>
+      <div id="subjectsContainer"></div>
+      <button class="add-btn" id="addSubjectBtn">
+        <i class="fas fa-plus-circle"></i> Add Subject
+      </button>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn btn-primary" id="generateBtn">
+        <i class="fas fa-file-invoice"></i> Generate Marksheet
+      </button>
+      <button class="btn btn-outline" id="resetBtn">
+        <i class="fas fa-undo-alt"></i> Reset
+      </button>
+    </div>
+  </div>
+
+  <div class="marksheet-panel" id="marksheetPanel">
+    <div class="marksheet-card" id="marksheetCard">
+      <div class="marksheet-header">
+        <h3>📋 Marksheet</h3>
+        <i class="fas fa-print"></i>
+      </div>
+      <div id="marksheetContent"></div>
+      <div class="marksheet-footer">
+        <i class="fas fa-shield-alt"></i> Official CGPA Record • Generated automatically
+      </div>
+    </div>
+    <div class="action-buttons" style="margin-top: 1.2rem;">
+      <button class="btn btn-export" id="exportPngBtn">
+        <i class="fas fa-image"></i> Export PNG
+      </button>
+      <button class="btn btn-export" id="exportPdfBtn">
+        <i class="fas fa-file-pdf"></i> Export PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    let subjects = [
+      { name: "", maxMarks: 100, marks: 0 },
+      { name: "", maxMarks: 100, marks: 0 },
+      { name: "", maxMarks: 100, marks: 0 }
+    ];
+
+    const subjectsContainer = document.getElementById('subjectsContainer');
+    const addSubjectBtn = document.getElementById('addSubjectBtn');
+    const generateBtn = document.getElementById('generateBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const marksheetContent = document.getElementById('marksheetContent');
+    const studentNameInput = document.getElementById('studentName');
+    const rollNumberInput = document.getElementById('rollNumber');
+    const exportPngBtn = document.getElementById('exportPngBtn');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
+
+    function renderSubjectInputs() {
+      subjectsContainer.innerHTML = '';
+      subjects.forEach((sub, index) => {
+        const row = document.createElement('div');
+        row.className = 'subject-row';
+        row.dataset.index = index;
+
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'subj-name';
+        const nameLabel = document.createElement('span');
+        nameLabel.className = 'input-label-sm';
+        nameLabel.textContent = 'Subject';
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.placeholder = 'e.g. Mathematics';
+        nameInput.value = sub.name;
+        nameInput.addEventListener('input', (e) => { subjects[index].name = e.target.value; });
+        nameDiv.appendChild(nameLabel);
+        nameDiv.appendChild(nameInput);
+
+        const maxDiv = document.createElement('div');
+        maxDiv.className = 'subj-max';
+        const maxLabel = document.createElement('span');
+        maxLabel.className = 'input-label-sm';
+        maxLabel.textContent = 'Max';
+        const maxInput = document.createElement('input');
+        maxInput.type = 'number';
+        maxInput.min = '1';
+        maxInput.placeholder = '100';
+        maxInput.value = sub.maxMarks;
+        maxInput.addEventListener('input', (e) => {
+          let val = parseFloat(e.target.value);
+          if (isNaN(val) || val < 1) val = 1;
+          subjects[index].maxMarks = val;
+          e.target.value = val;
+          const marksInput = row.querySelector('.subj-marks input');
+          if (marksInput) {
+            let currentMarks = parseFloat(marksInput.value) || 0;
+            if (currentMarks > val) {
+              marksInput.value = val;
+              subjects[index].marks = val;
+            }
+          }
+        });
+        maxDiv.appendChild(maxLabel);
+        maxDiv.appendChild(maxInput);
+
+        const marksDiv = document.createElement('div');
+        marksDiv.className = 'subj-marks';
+        const marksLabel = document.createElement('span');
+        marksLabel.className = 'input-label-sm';
+        marksLabel.textContent = 'Marks';
+        const marksInput = document.createElement('input');
+        marksInput.type = 'number';
+        marksInput.min = '0';
+        marksInput.placeholder = '0';
+        marksInput.value = sub.marks;
+        marksInput.addEventListener('input', (e) => {
+          let val = parseFloat(e.target.value);
+          if (isNaN(val)) val = 0;
+          const max = subjects[index].maxMarks || 100;
+          val = Math.min(max, Math.max(0, val));
+          subjects[index].marks = val;
+          e.target.value = val;
+        });
+        marksDiv.appendChild(marksLabel);
+        marksDiv.appendChild(marksInput);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        removeBtn.addEventListener('click', () => {
+          if (subjects.length > 1) {
+            subjects.splice(index, 1);
+            renderSubjectInputs();
+          } else {
+            alert('At least one subject is required.');
+          }
+        });
+
+        row.appendChild(nameDiv);
+        row.appendChild(maxDiv);
+        row.appendChild(marksDiv);
+        row.appendChild(removeBtn);
+        subjectsContainer.appendChild(row);
+      });
+    }
+
+    function computeMarksheet() {
+      const studentName = studentNameInput.value.trim() || 'Student';
+      const rollNo = rollNumberInput.value.trim() || 'N/A';
+
+      let totalMarks = 0;
+      let totalMaxMarks = 0;
+      let anyFail = false;
+
+      const subjectResults = subjects.map(sub => {
+        const marks = Number(sub.marks) || 0;
+        const maxMarks = Number(sub.maxMarks) || 100;
+        totalMarks += marks;
+        totalMaxMarks += maxMarks;
+        const percentage = maxMarks > 0 ? (marks / maxMarks) * 100 : 0;
+        const isPass = percentage >= 35;
+        if (!isPass) anyFail = true;
+        return {
+          name: sub.name.trim() || 'Unnamed',
+          marks: marks,
+          maxMarks: maxMarks,
+          percentage: percentage,
+          isPass: isPass,
+          status: isPass ? 'Pass' : 'Fail'
+        };
+      });
+
+      const overallPercentage = totalMaxMarks > 0 ? (totalMarks / totalMaxMarks) * 100 : 0;
+      const cgpa = overallPercentage / 10;
+      const overallStatus = anyFail ? 'FAIL' : 'PASS';
+
+      return {
+        studentName, rollNo, subjectResults,
+        overallPercentage,
+        cgpa: parseFloat(cgpa.toFixed(2)),
+        overallStatus, anyFail
+      };
+    }
+
+    function renderMarksheet() {
+      const data = computeMarksheet();
+      const { studentName, rollNo, subjectResults, overallPercentage, cgpa, overallStatus, anyFail } = data;
+
+      if (!subjectResults.length) {
+        marksheetContent.innerHTML = `<div class="empty-message"><i class="fas fa-book"></i> No subjects added</div>`;
+        return;
+      }
+
+      let rowsHtml = '';
+      subjectResults.forEach((sub, idx) => {
+        const badgeClass = sub.isPass ? 'pass-badge' : 'fail-badge';
+        rowsHtml += `<tr>
+          <td>${idx + 1}</td>
+          <td title="${escapeHtml(sub.name)}">${escapeHtml(sub.name)}</td>
+          <td>${sub.maxMarks}</td>
+          <td>${sub.marks}</td>
+          <td>${sub.percentage.toFixed(1)}%</td>
+          <td><span class="${badgeClass}">${sub.status}</span></td>
+        </tr>`;
+      });
+
+      const statusClass = anyFail ? 'status-fail' : 'status-pass';
+      const statusText = anyFail ? 'FAIL' : 'PASS';
+
+      const html = `
+        <div class="student-info">
+          <div><span class="label">Name:</span> <span>${escapeHtml(studentName)}</span></div>
+          <div><span class="label">Roll No:</span> <span>${escapeHtml(rollNo)}</span></div>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Subject</th>
+                <th>Max Marks</th>
+                <th>Obtained</th>
+                <th>Percentage</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+        <div class="summary">
+          <div class="cgpa-box">
+            <span class="label">CGPA (10 scale)</span>
+            <span class="value">${cgpa.toFixed(2)}</span>
+          </div>
+          <div class="cgpa-box">
+            <span class="label">Overall Percentage</span>
+            <span class="value" style="font-size:1.7rem;">${overallPercentage.toFixed(1)}%</span>
+          </div>
+          <div class="overall-status ${statusClass}">${statusText}</div>
+        </div>
+      `;
+
+      marksheetContent.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text).replace(/[&<>"]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        if (m === '"') return '&quot;';
+        return m;
+      });
+    }
+
+    function initialize() {
+      renderSubjectInputs();
+      renderMarksheet();
+    }
+
+    addSubjectBtn.addEventListener('click', () => {
+      subjects.push({ name: "", maxMarks: 100, marks: 0 });
+      renderSubjectInputs();
+    });
+
+    generateBtn.addEventListener('click', () => {
+      const rows = subjectsContainer.querySelectorAll('.subject-row');
+      rows.forEach((row, idx) => {
+        const nameInput = row.querySelector('.subj-name input');
+        const maxInput = row.querySelector('.subj-max input');
+        const marksInput = row.querySelector('.subj-marks input');
+        if (nameInput) subjects[idx].name = nameInput.value;
+        if (maxInput) {
+          let maxVal = parseFloat(maxInput.value);
+          if (isNaN(maxVal) || maxVal < 1) maxVal = 100;
+          subjects[idx].maxMarks = maxVal;
+        }
+        if (marksInput) {
+          let marksVal = parseFloat(marksInput.value);
+          if (isNaN(marksVal)) marksVal = 0;
+          const max = subjects[idx].maxMarks || 100;
+          marksVal = Math.min(max, Math.max(0, marksVal));
+          subjects[idx].marks = marksVal;
+          marksInput.value = marksVal;
+        }
+      });
+      renderMarksheet();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      subjects = [
+        { name: "", maxMarks: 100, marks: 0 },
+        { name: "", maxMarks: 100, marks: 0 },
+        { name: "", maxMarks: 100, marks: 0 }
+      ];
+      studentNameInput.value = '';
+      rollNumberInput.value = '';
+      renderSubjectInputs();
+      renderMarksheet();
+    });
+
+    /* ---------- FIXED EXPORT: expands card so all columns are visible ---------- */
+    async function captureFullMarksheet() {
+      const card = document.getElementById('marksheetCard');
+
+      // Add export-mode class to expand width and remove overflow constraints
+      card.classList.add('export-mode');
+
+      // Give browser time to reflow
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      const canvas = await html2canvas(card, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        allowTaint: false,
+        useCORS: true,
+        logging: false,
+        width: card.scrollWidth,
+        height: card.scrollHeight,
+        windowWidth: card.scrollWidth,
+        windowHeight: card.scrollHeight,
+        scrollX: 0,
+        scrollY: 0
+      });
+
+      // Remove export-mode class
+      card.classList.remove('export-mode');
+
+      return canvas;
+    }
+
+    exportPngBtn.addEventListener('click', async () => {
+      try {
+        exportPngBtn.disabled = true;
+        exportPngBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+
+        const canvas = await captureFullMarksheet();
+        const link = document.createElement('a');
+        const fileName = `marksheet_${(studentNameInput.value.trim() || 'student').replace(/\s+/g, '_')}.png`;
+        link.download = fileName;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (err) {
+        console.error('PNG export error:', err);
+        alert('Could not export PNG. Please try again.');
+      } finally {
+        exportPngBtn.disabled = false;
+        exportPngBtn.innerHTML = '<i class="fas fa-image"></i> Export PNG';
+      }
+    });
+
+    exportPdfBtn.addEventListener('click', async () => {
+      try {
+        exportPdfBtn.disabled = true;
+        exportPdfBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+
+        const canvas = await captureFullMarksheet();
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const margin = 10;
+        const imgWidth = pdfWidth - margin * 2;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        let heightLeft = imgHeight;
+        let position = margin;
+
+        pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+        heightLeft -= (pdfHeight - margin * 2);
+
+        while (heightLeft > 0) {
+          position = heightLeft - imgHeight + margin;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+          heightLeft -= (pdfHeight - margin * 2);
+        }
+
+        const fileName = `marksheet_${(studentNameInput.value.trim() || 'student').replace(/\s+/g, '_')}.pdf`;
+        pdf.save(fileName);
+      } catch (err) {
+        console.error('PDF export error:', err);
+        alert('Could not export PDF. Please try again.');
+      } finally {
+        exportPdfBtn.disabled = false;
+        exportPdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Export PDF';
+      }
+    });
+
+    initialize();
+  })();
+</script>
+</body>
+</html>
